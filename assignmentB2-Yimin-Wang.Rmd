@@ -1,0 +1,107 @@
+---
+title: "assignmentB1-Yimin-Wang"
+output: github_document
+date: "2026-11-06"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(testthat)
+```
+
+## Exercise 1 and Exercise 2
+
+```{r}
+#' Re-scale a numeric vector to a new target range 
+#' 
+#' This function re-scales a numeric vector with at least 2 items to a new vector with the same length but different, designated target range. 
+#' 
+#' @param x a numeric vector to be re-scaled, items cannot all be the same number. 
+#' @param y a numeric vector of length 2, indicating the min and max of the target range, respectively. The default is 'c(0,1)'. 
+#' @param na.rm a logical parameter indicating if NA values should be removed. The default is 'True'. 
+#' @return A numeric vector of the same length as 'x', but with the values scaled according to the values provided in 'y'.
+
+rescale_min_max <- function(x, y = c(0, 1), na.rm = TRUE) {
+  stopifnot(is.numeric(x), is.numeric(y), length(y) == 2, y[1] < y[2])
+  rng <- range(x, na.rm = na.rm)
+  if (rng[1] == rng[2]) stop("Cannot rescale a constant number")
+  (x - rng[1]) / (rng[2] - rng[1]) * (y[2] - y[1]) + y[1]
+}
+
+```
+
+## Exercise 3
+
+Demonstrate the usage of your function with a few examples. Use one or more new code chunks, describing what you’re doing.
+
+```{r}
+# rescale a numeric vector
+example1 <- c(10,25,40,58)
+rescale_min_max(example1)
+```
+
+```{r}
+# rescale a numeric vector with NA, should get the same length vector
+example2 <- c(2, NA, 7, 11, 50)
+rescale_min_max(example2)
+```
+
+```{r}
+# rescale a non-numeric vector, should get error
+# example3 <- c("1", "2", "3")
+# rescale_min_max(example3)
+```
+
+```{r}
+# rescale with invalid target interval, should get error 
+# example4 <- c(1,3,5)
+# rescale_min_max(example4, y = c(20,1))
+```
+
+## Exercise 4
+
+```{r}
+test_that("rescale_min_max works correctly across all ranges", {
+  # default to [0, 1]
+  expect_equal(
+    rescale_min_max(c(10, 20, 30)),
+    c(0, 0.5, 1)
+  )
+
+  # negative endpoints -- y[1], y[2]
+  expect_equal(
+    rescale_min_max(c(0, 5, 10), y = c(-1, 1)),
+    c(-1, 0, 1)
+  )
+
+  # handling NA 
+  expect_equal(
+    rescale_min_max(c(1, NA, 3), na.rm = TRUE),
+    c(0, NA, 1)
+  )
+})
+
+# expect errors: 
+test_that("rescale_min_max outputs errors correctly", {
+  # error on non-numeric x
+  expect_error(
+    rescale_min_max(c("a", "b", "c")),
+    class = "error"
+  )
+
+  # error on constant vector (same numbers)
+  expect_error(
+    rescale_min_max(c(7, 7, 7)),
+    "Cannot rescale a constant number"
+  )
+
+  # error when target bounds in y are inverted 
+  expect_error(
+    rescale_min_max(c(1, 2, 3), y = c(5, 1)),
+    class = "error"
+  )
+})
+```
